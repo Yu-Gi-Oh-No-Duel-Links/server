@@ -1,5 +1,9 @@
 if (process.env.NODE_ENV === 'development') require('dotenv').config()
 const app = require('express')()
+const cors = require('cors')
+
+app.use(cors())
+
 const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 const PORT = process.env.PORT || 3000
@@ -13,11 +17,11 @@ const rooms = {
   dummy: {
     player1: {
       username: 'x',
-      health: 8000
+      health: 4000
     },
     player2: {
       username: 'y',
-      health: 8000
+      health: 4000
     },
     player1Cards: [],
     player2Cards: []
@@ -35,7 +39,7 @@ io.on('connection', socket => {
       setRoom(roomName, username)
       // socket.emit('SET_CARDS', rooms[roomName].player1.cards)
     } else if (!rooms[roomName].player2) {
-      rooms[roomName].player2 = { username, healt: 8000 }
+      rooms[roomName].player2 = { username, healt: 4000 }
       socket.join(roomName)
       setRoom(roomName, username)
       // socket.emit('SET_CARDS', rooms[roomName].player1Cards)
@@ -43,7 +47,7 @@ io.on('connection', socket => {
       socket.join(roomName)
       setRoom(roomName, username)
       // socket.emit('SET_CARDS', rooms[roomName].player2Cards)
-    } else socket.emit('error', 'Room already full!')
+    } else socket.emit('ERROR', 'Room already full!')
   }
 
   function setRoom(roomName, username) {
@@ -54,20 +58,22 @@ io.on('connection', socket => {
   }
 
   socket.on('register-user', username => {
-    if (users[username]) socket.emit('error', 'Username already taken!')
+    if (users[username]) socket.emit('ERROR', 'Username already taken!')
     else {
       users[username] = ''
       socket.emit('SET_USER', username)
+      console.log('New User registered:', username)
     }
   })
 
-  socket.on('reconnect', username => {
-    if (users[username]) {
+  socket.on('reconnect-user', username => {
+    if (users[username] !== undefined) {
+      console.log('User', username, 'reconnecting')
       if (users[username] == '') socket.emit('SET_USER', username)
       else {
         joinRoom(users[username], username)
       }
-    } else socket.emit('error', 'No Username!')
+    } else socket.emit('ERROR', 'No Username!')
   })
 
   socket.on('fetch-rooms', () => {
@@ -76,7 +82,7 @@ io.on('connection', socket => {
 
   socket.on('create-room', (roomName, username) => {
     if (rooms[roomName])
-      socket.emit('error', `Room with name ${roomName} already created!`)
+      socket.emit('ERROR', `Room with name ${roomName} already created!`)
     else {
       rooms[roomName] = {
         player1: {

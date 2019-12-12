@@ -3,11 +3,14 @@ const app = require('express')()
 const cors = require('cors')
 
 app.use(cors())
+// app.post('/fetchimages')
 
 const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 const PORT = process.env.PORT || 3000
 const Card = require('./models/Card')
+
+// io.use(cors())
 
 require('./config/mongoose')
 
@@ -113,6 +116,8 @@ io.on('connection', socket => {
   })
 
   socket.on('join-room', joinRoom)
+
+  socket.on('get-room-data', setRoom)
 
   socket.on('get-cards', (roomName, cardSetOf, currentCards) => {
     Card.find()

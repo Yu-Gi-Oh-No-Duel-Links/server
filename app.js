@@ -69,16 +69,13 @@ io.on('connection', socket => {
     if (rooms[roomName].player1.username == username) {
       socket.join(roomName)
       socket.emit('SET_ROOM_NAME', roomName)
-      // socket.emit('SET_CARDS', rooms[roomName].player1.cards)
     } else if (!rooms[roomName].player2) {
       rooms[roomName].player2 = { username, healt: 4000 }
       socket.join(roomName)
       socket.emit('SET_ROOM_NAME', roomName)
-      // socket.emit('SET_CARDS', rooms[roomName].player1Cards)
     } else if (rooms[roomName].player2.username == username) {
       socket.join(roomName)
       socket.emit('SET_ROOM_NAME', roomName)
-      // socket.emit('SET_CARDS', rooms[roomName].player2Cards)
     } else
       socket.emit('ERROR', { name: 'RoomFull', message: 'Room already full!' })
   }
@@ -151,7 +148,7 @@ io.on('connection', socket => {
   socket.on('get-cards', (roomName, cardSetOf, currentCards) => {
     Card.find()
       .then(cards => {
-        rooms[roomName][cardSetOf] = currentCards
+        rooms[roomName][cardSetOf] = [...currentCards]
         for (let i = 0; i < 5 - currentCards.length; i++) {
           rooms[roomName][cardSetOf].push(
             cards[Math.floor(Math.random() * cards.length)]

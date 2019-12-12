@@ -9,7 +9,16 @@ const cardSchema = new Schema({
     type: String,
     required: true
   },
-  damage: {
+  imageSmall: {
+    type: String,
+    required: true
+  },
+  atk: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  def: {
     type: Number,
     required: true,
     default: 0

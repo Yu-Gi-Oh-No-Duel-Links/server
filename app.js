@@ -1,14 +1,43 @@
 if (process.env.NODE_ENV === 'development') require('dotenv').config()
-const app = require('express')()
+const express = require('express')
+const app = express()
 const cors = require('cors')
+const Card = require('./models/Card')
+
+// const upload = require('gcs-upload')({
+//   gcsConfig: {
+//     keyFilename: process.env.GOOGLE_KEYFILE_PATH || './keyfile.json',
+//     bucketName: 'aliftaufik-hacktiv8-buckets'
+//   }
+// })
 
 app.use(cors())
-// app.post('/fetchimages')
+// app.use(express.urlencoded({ extended: false }))
+// app.use(express.json({ limit: '10mb' }))
+// app.post('/fetchimages', upload.single(''))
+// app.post('/fetchdata', (req, res, next) => {
+//   const rawCards = req.body
+//   Card.create(
+//     ...rawCards.map(card => {
+//       const { name, atk, def } = card
+//       return {
+//         name,
+//         atk,
+//         def,
+//         image: card.card_images[0].image_url,
+//         imageSmall: card.card_images[0].image_url_small
+//       }
+//     })
+//   )
+//     .then(cards => {
+//       res.status(201).json(cards.length)
+//     })
+//     .catch(err => console.log(err))
+// })
 
 const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 const PORT = process.env.PORT || 3000
-const Card = require('./models/Card')
 
 // io.use(cors())
 

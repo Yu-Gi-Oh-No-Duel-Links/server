@@ -60,6 +60,10 @@ const users = {
   x: 'dummy'
 }
 
+const turnData = {
+  dummy: {}
+}
+
 io.on('connection', socket => {
   function joinRoom(roomName, username) {
     if (
@@ -103,12 +107,9 @@ io.on('connection', socket => {
       player1: room.player1,
       player2: room.player2
     })
-    if (rooms[roomName].player1 && rooms[roomName].player1.username == username)
+    if (room.player1 && room.player1.username == username)
       socket.emit('SET_CARDS', room.player1Cards)
-    else if (
-      rooms[roomName].player2 &&
-      rooms[roomName].player2.username == username
-    )
+    else if (room.player2 && room.player2.username == username)
       socket.emit('SET_CARDS', room.player2Cards)
   }
 
@@ -163,16 +164,16 @@ io.on('connection', socket => {
 
   socket.on('get-room-data', setRoom)
 
-  socket.on('get-cards', (roomName, cardSetOf, currentCards) => {
+  socket.on('get-cards', (roomName, as, currentCards) => {
     Card.find()
       .then(cards => {
-        rooms[roomName][cardSetOf] = [...currentCards]
+        rooms[roomName][as + 'Cards'] = [...currentCards]
         for (let i = 0; i < 5 - currentCards.length; i++) {
-          rooms[roomName][cardSetOf].push(
+          rooms[roomName][as + 'Cards'].push(
             cards[Math.floor(Math.random() * cards.length)]
           )
         }
-        socket.emit('SET_CARDS', rooms[roomName][cardSetOf])
+        socket.emit('SET_CARDS', rooms[roomName][as + 'Cards'])
       })
       .catch(err => console.log(err))
   })
@@ -180,20 +181,47 @@ io.on('connection', socket => {
   socket.on('leave-room', (roomName, username) => {
     if (rooms[roomName].player1.username == username) {
       rooms[roomName].player1 = undefined
+      rooms[roomName].player1Cards = []
       users[username] = ''
       console.log('User', username, 'leave room', roomName)
     } else if (rooms[roomName].player2.username == username) {
       rooms[roomName].player2 = undefined
+      rooms[roomName].player2Cards = []
       users[username] = ''
       console.log('User', username, 'leave room', roomName)
     } else
       socket.emit('ERROR', { name: 'Error', message: 'User not in the room!' })
 
-    setRoom(roomName, username)
+    if (!rooms[roomName].player1 && !rooms[roomName].player2)
+      delete rooms[roomName]
+    else setRoom(roomName, username)
+
     socket.emit('CLEAR_ROOM_DATA')
   })
 
-  // socket.on('on-turn', (roomName, roomData))
+  socket.on('on-turn', (roomName, as, cardSelected) => {
+    if (Object.keys(turnData[roomName]) > 0) {
+      turnData[roomName][as] = cardSelected
+      const player1 = turnData[roomName].player1
+      const player2 = turnData[roomName].player2
+
+      const result = player1.atk - player2.atk
+      if (result > 0) rooms[roomName].player2.health -= Math.abs(result)
+      else if (result < 0) rooms[roomName].player1.healt -= Math.abs(result)
+      rooms[roomName].player1Cards = rooms[roomName].player1Cards.filter(
+        card => card.name != turnData[roomName].player1.name
+      )
+      rooms[roomName].player2Cards = rooms[roomName].player2Cards.filter(
+        card => card.name != turnData[roomName].player2.name
+      )
+
+      turnData[roomName] = {}
+      io.to(roomName).emit('TURN_DONE')
+    } else {
+      turnData[roomName][as] = cardSelected
+      socket.emit('WAIT_OTHER_PLAYER')
+    }
+  })
 })
 
 // const room = {

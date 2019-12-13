@@ -179,22 +179,33 @@ io.on('connection', socket => {
   })
 
   socket.on('leave-room', (roomName, username) => {
-    if (rooms[roomName].player1.username == username) {
+    if (
+      rooms[roomName].player1 &&
+      rooms[roomName].player1.username == username
+    ) {
       rooms[roomName].player1 = undefined
       rooms[roomName].player1Cards = []
       users[username] = ''
       console.log('User', username, 'leave room', roomName)
-    } else if (rooms[roomName].player2.username == username) {
+    } else if (
+      rooms[roomName].player2 &&
+      rooms[roomName].player2.username == username
+    ) {
       rooms[roomName].player2 = undefined
       rooms[roomName].player2Cards = []
       users[username] = ''
       console.log('User', username, 'leave room', roomName)
     } else
-      socket.emit('ERROR', { name: 'Error', message: 'User not in the room!' })
+      socket.emit('ERROR', {
+        name: 'Error',
+        message: 'User not in the room!'
+      })
 
-    if (!rooms[roomName].player1 && !rooms[roomName].player2)
+    if (!rooms[roomName].player1 && !rooms[roomName].player2) {
       delete rooms[roomName]
-    else setRoom(roomName, username)
+      console.log('All players have left. Room', roomName, 'destroyed')
+      io.emit('SET_ROOM_LIST', Object.keys(rooms))
+    } else setRoom(roomName, username)
 
     socket.emit('CLEAR_ROOM_DATA')
   })

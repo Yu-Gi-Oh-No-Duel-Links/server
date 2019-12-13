@@ -13,8 +13,8 @@ const Card = require('./models/Card')
 
 app.use(cors())
 // app.use(express.urlencoded({ extended: false }))
-// app.use(express.json({ limit: '10mb' }))
 // app.post('/fetchimages', upload.single(''))
+// app.use(express.json({ limit: '10mb' }))
 // app.post('/fetchdata', (req, res, next) => {
 //   const rawCards = req.body
 //   Card.create(
@@ -49,10 +49,6 @@ const rooms = {
   dummy: {
     player1: {
       username: 'x',
-      health: 4000
-    },
-    player2: {
-      username: 'y',
       health: 4000
     },
     player1Cards: [],
@@ -185,9 +181,11 @@ io.on('connection', socket => {
     if (rooms[roomName].player1.username == username) {
       rooms[roomName].player1 = undefined
       users[username] = ''
+      console.log('User', username, 'leave room', roomName)
     } else if (rooms[roomName].player2.username == username) {
       rooms[roomName].player2 = undefined
       users[username] = ''
+      console.log('User', username, 'leave room', roomName)
     } else
       socket.emit('ERROR', { name: 'Error', message: 'User not in the room!' })
 
